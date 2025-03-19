@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "499917334296",
+    "project_id": "gestao-eventos-a02c3",
+    "storage_bucket": "gestao-eventos-a02c3.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:499917334296:android:bbd3140ef014a77b6f206d",
+        "android_client_info": {
+          "package_name": "com.example.gestao_eventos"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAJDV6It15LIpWQmcjAtWWye79q6Nyvi-E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

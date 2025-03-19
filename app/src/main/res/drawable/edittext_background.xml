@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shape="rectangle">
+
+    <!-- Cor de fundo -->
+    <solid android:color="#F5F5F5"/> <!-- Cinza claro -->
+
+    <!-- Borda arredondada -->
+    <corners android:radius="8dp"/>
+
+    <!-- Borda do EditText -->
+    <stroke
+        android:width="1dp"
+        android:color="#D3D3D3"/> <!-- Cinza médio -->
+</shape>
