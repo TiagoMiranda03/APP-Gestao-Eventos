@@ -1,0 +1,214 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ffeeff"
+    android:padding="16dp">
+
+    <!-- Registo Title -->
+    <TextView
+        android:id="@+id/tvRegistoTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="100dp"
+        android:text="Registo"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/black" />
+
+    <!-- Nome Input -->
+    <LinearLayout
+        android:id="@+id/llNome"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/tvRegistoTitle"
+        android:layout_marginTop="30dp"
+        android:orientation="horizontal"
+        android:background="@drawable/edit_text_background"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/ivNomeIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_user" />
+
+        <EditText
+            android:id="@+id/etNome"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Nome"
+            android:inputType="text"
+            android:textColor= "@android:color/black"
+            android:textColorHint="#606060"/>
+    </LinearLayout>
+
+    <!-- Email Input -->
+    <LinearLayout
+        android:id="@+id/llEmail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/llNome"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/edit_text_background"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/ivEmailIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_email" />
+
+        <EditText
+            android:id="@+id/etEmail"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:textColor= "@android:color/black"
+            android:textColorHint="#606060"/>
+    </LinearLayout>
+
+    <!-- Password Input -->
+    <LinearLayout
+        android:id="@+id/llPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/llEmail"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/edit_text_background"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/ivPasswordIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_lock" />
+
+        <EditText
+            android:id="@+id/etPassword"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:textColor= "@android:color/black"
+            android:textColorHint="#606060"/>
+
+        <ImageView
+            android:id="@+id/ivTogglePassword"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_visibility" />
+    </LinearLayout>
+
+    <!-- Confirm Password Input -->
+    <LinearLayout
+        android:id="@+id/llConfirmPassword"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/llPassword"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/edit_text_background"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/ivConfirmPasswordIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_lock" />
+
+        <EditText
+            android:id="@+id/etConfirmPassword"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Confirmar Password"
+            android:inputType="textPassword"
+            android:textColor= "@android:color/black"
+            android:textColorHint="#606060"/>
+
+        <ImageView
+            android:id="@+id/ivConfirmTogglePassword"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_visibility" />
+    </LinearLayout>
+
+    <!-- Data de Nascimento Input -->
+    <LinearLayout
+        android:id="@+id/llDataNascimento"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/llConfirmPassword"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/edit_text_background"
+        android:orientation="horizontal"
+        android:padding="12dp">
+
+        <ImageView
+            android:id="@+id/ivDataNascimentoIcon"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:src="@drawable/ic_date" />
+
+        <EditText
+            android:id="@+id/etDataNascimento"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:hint="Data de Nascimento"
+            android:inputType="text"
+            android:textColor= "@android:color/black"
+            android:textColorHint="#606060"/>
+    </LinearLayout>
+
+    <!-- Botão Registo -->
+    <RelativeLayout
+        android:id="@+id/btnRegisto"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_below="@id/llDataNascimento"
+        android:layout_marginTop="40dp"
+        android:background="@drawable/rounded_button_background"
+        android:padding="8dp">
+
+        <TextView
+            android:id="@+id/Registo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="16dp"
+            android:text="REGISTO"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="@android:color/white" />
+
+        <ImageView
+            android:id="@+id/ivArrow"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="16dp"
+            android:src="@drawable/ic_arrow_right" />
+    </RelativeLayout>
+
+</RelativeLayout>

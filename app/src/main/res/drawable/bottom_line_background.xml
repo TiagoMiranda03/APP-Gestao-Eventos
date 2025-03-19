@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Linha inferior -->
+    <item android:gravity="bottom">
+        <shape android:shape="rectangle">
+            <size android:height="1dp" /> <!-- Altura da linha -->
+            <solid android:color="#E0E0E0" /> <!-- Cor da linha -->
+        </shape>
+    </item>
+</layer-list>
