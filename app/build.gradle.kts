@@ -18,6 +18,13 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    packagingOptions{
+        resources{
+            excludes += "META-INF/DEPENDENCIES"
+        }
+
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -40,6 +47,10 @@ android {
 }
 
 dependencies {
+    implementation("com.sendgrid:sendgrid-java:4.9.3")
+    implementation("com.squareup.okhttp3:okhttp:4.11.0")
+
+
     implementation(platform("com.google.firebase:firebase-bom:33.9.0"))
 
     implementation("com.google.firebase:firebase-firestore-ktx")

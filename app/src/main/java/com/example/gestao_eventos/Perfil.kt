@@ -2,13 +2,22 @@ package com.example.gestao_eventos
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gestao_eventos.databinding.ActivityPerfilBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.seuapp.ui.fragments.FAQFragment
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.IOException
 
 class Perfil : AppCompatActivity() {
 
@@ -49,7 +58,14 @@ class Perfil : AppCompatActivity() {
             val fragment = FAQFragment.newInstance()
             supportFragmentManager.beginTransaction().replace(R.id.container, fragment).addToBackStack(null).commit()
         }
+        
+        binding.ivteste.setOnClickListener{
 
+            //API: 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
+            //eventosgestao56@gmail.com
+
+            enviarEmail()
+        }
 
 
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
@@ -84,6 +100,65 @@ class Perfil : AppCompatActivity() {
             }
         }
     }
+
+    private fun enviarEmail() {
+        val client = OkHttpClient()
+
+        val json = JSONObject().apply {
+            put("personalizations", JSONArray().put(JSONObject().apply {
+                put("to", JSONArray().put(JSONObject().put("email", "gamesrd164@gmail.com")))
+            }))
+            put("from", JSONObject().put("email", "eventosgestao56@gmail.com"))
+            put("subject", "Assunto do Email")
+            put("content", JSONArray().put(JSONObject().apply {
+                put("type", "text/html")
+                put("value", """
+            <html>
+                <body>
+                    <p>Olá,</p>
+                    <p>Obrigado por se inscrever no nosso evento!</p>
+                    <p>Se precisar de mais informações, entre em contato.</p>
+                    <br>
+                    <p>Atenciosamente,</p>
+                    <p><strong>Equipe Gestão Eventos</strong></p>
+                </body>
+            </html>
+        """.trimIndent())
+            }))
+        }
+
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), json.toString())
+
+        val request = Request.Builder()
+            .url("https://api.sendgrid.com/v3/mail/send")
+            .addHeader("Authorization", "Bearer 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")
+            .addHeader("Content-Type", "application/json")
+            .post(requestBody)
+            .build()
+
+        client.newCall(request).enqueue(object : okhttp3.Callback {
+            override fun onFailure(call: okhttp3.Call, e: IOException) {
+                Log.e("SendGrid", "Erro ao enviar email: ${e.message}")
+                runOnUiThread {
+                    Toast.makeText(applicationContext, "Erro ao enviar email", Toast.LENGTH_SHORT).show()
+                }
+            }
+
+            override fun onResponse(call: okhttp3.Call, response: okhttp3.Response) {
+                Log.d("SendGrid", "Código de resposta: ${response.code}")
+                Log.d("SendGrid", "Resposta: ${response.body?.string()}") // Mostra a resposta completa
+                runOnUiThread {
+                    if (response.isSuccessful) {
+                        Toast.makeText(applicationContext, "Email enviado com sucesso!", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(applicationContext, "Erro: ${response.message}", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            }
+        })
+    }
+
+
 
     private fun carregarNomePerfil(){
         val user = auth.currentUser
