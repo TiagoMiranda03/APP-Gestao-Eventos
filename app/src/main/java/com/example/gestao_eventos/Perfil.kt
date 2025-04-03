@@ -2,15 +2,20 @@ package com.example.gestao_eventos
 
 import android.content.Intent
 import android.os.Bundle
+<<<<<<< HEAD
 import android.util.Log
 import android.view.View
 import android.widget.Toast
+=======
+import android.view.View
+>>>>>>> 7833391176b85b6e62bc3e66eb3ecce23dfe1ad9
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gestao_eventos.databinding.ActivityPerfilBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.seuapp.ui.fragments.FAQFragment
+<<<<<<< HEAD
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -18,6 +23,8 @@ import okhttp3.RequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+=======
+>>>>>>> 7833391176b85b6e62bc3e66eb3ecce23dfe1ad9
 
 class Perfil : AppCompatActivity() {
 
@@ -58,6 +65,7 @@ class Perfil : AppCompatActivity() {
             val fragment = FAQFragment.newInstance()
             supportFragmentManager.beginTransaction().replace(R.id.container, fragment).addToBackStack(null).commit()
         }
+<<<<<<< HEAD
         
         binding.ivteste.setOnClickListener{
 
@@ -66,6 +74,9 @@ class Perfil : AppCompatActivity() {
 
             enviarEmail()
         }
+=======
+
+>>>>>>> 7833391176b85b6e62bc3e66eb3ecce23dfe1ad9
 
 
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
@@ -79,8 +90,11 @@ class Perfil : AppCompatActivity() {
                     true
                 }
                 R.id.event -> {
+<<<<<<< HEAD
                     startActivity(Intent(this, Eventos::class.java))
                     overridePendingTransition(0, 0)
+=======
+>>>>>>> 7833391176b85b6e62bc3e66eb3ecce23dfe1ad9
                     true
                 }
                 R.id.newevent -> {
@@ -103,6 +117,7 @@ class Perfil : AppCompatActivity() {
         }
     }
 
+<<<<<<< HEAD
     private fun enviarEmail() {
         val client = OkHttpClient()
 
@@ -162,6 +177,8 @@ class Perfil : AppCompatActivity() {
 
 
 
+=======
+>>>>>>> 7833391176b85b6e62bc3e66eb3ecce23dfe1ad9
     private fun carregarNomePerfil(){
         val user = auth.currentUser
         if (user!= null){

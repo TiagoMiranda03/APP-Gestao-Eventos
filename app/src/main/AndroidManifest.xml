@@ -13,9 +13,12 @@
         android:theme="@style/Theme.Gestao_Eventos"
         tools:targetApi="31">
         <activity
+<<<<<<< HEAD
             android:name=".Eventos"
             android:exported="false" />
         <activity
+=======
+>>>>>>> 7833391176b85b6e62bc3e66eb3ecce23dfe1ad9
             android:name=".CriarEvento"
             android:exported="false" />
         <activity

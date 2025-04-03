@@ -121,6 +121,7 @@
                 android:src="@drawable/ic_arrow_perfil" />
         </RelativeLayout>
 
+<<<<<<< HEAD
         <!-- Teste-->
         <RelativeLayout
             android:layout_width="match_parent"
@@ -144,6 +145,8 @@
                 android:src="@drawable/ic_arrow_perfil" />
         </RelativeLayout>
 
+=======
+>>>>>>> 7833391176b85b6e62bc3e66eb3ecce23dfe1ad9
         <!-- Logout -->
         <RelativeLayout
             android:layout_width="match_parent"
