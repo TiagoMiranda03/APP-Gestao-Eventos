@@ -50,12 +50,10 @@ class Fontes_Inspiracao : AppCompatActivity() {
                     true
                 }
                 R.id.event -> {
-<<<<<<< HEAD
+
                     startActivity(Intent(this, Eventos::class.java))
                     overridePendingTransition(0, 0)
-=======
                     //startActivity(Intent(this, EventActivity::class.java))
->>>>>>> 7833391176b85b6e62bc3e66eb3ecce23dfe1ad9
                     true
                 }
                 R.id.newevent -> {
