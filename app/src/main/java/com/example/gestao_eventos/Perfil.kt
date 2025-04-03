@@ -79,6 +79,8 @@ class Perfil : AppCompatActivity() {
                     true
                 }
                 R.id.event -> {
+                    startActivity(Intent(this, Eventos::class.java))
+                    overridePendingTransition(0, 0)
                     true
                 }
                 R.id.newevent -> {

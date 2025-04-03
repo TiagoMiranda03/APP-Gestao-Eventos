@@ -7,42 +7,42 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.example.gestao_eventos.databinding.ActivityFontesInspiracaoBinding
+import com.example.gestao_eventos.databinding.ActivityEventosBinding
 import com.google.android.material.bottomnavigation.BottomNavigationView
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
-class Fontes_Inspiracao : AppCompatActivity() {
+class Eventos : AppCompatActivity() {
 
-    private lateinit var binding: ActivityFontesInspiracaoBinding
+    private lateinit var binding: ActivityEventosBinding
     private lateinit var listView: ListView
     private lateinit var db: FirebaseFirestore
-    private val fontesList = mutableListOf<Pair<String,String>>()
+    private val eventosList = mutableListOf<Pair<String, String>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityFontesInspiracaoBinding.inflate(layoutInflater)
+        binding = ActivityEventosBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
         db = FirebaseFirestore.getInstance()
 
-        carregarFontesInspiracao()
+        carregarEventosUsuarioLogado()
 
         binding.eventList.setOnItemClickListener { _, _, position, _ ->
-            val fonteSelecionada = fontesList[position]
-            val idFonte = fonteSelecionada.first
+            val eventoSelecionado = eventosList[position]
+            val idEvento = eventoSelecionado.first
 
             binding.container.visibility = View.VISIBLE
 
-            val fragment = DetalheFonteFragment.newInstance(idFonte)
+           val fragment = EventosDetalhe.newInstance(idEvento)
             supportFragmentManager.beginTransaction()
                 .replace(R.id.container, fragment)
                 .addToBackStack(null)
                 .commit()
         }
 
-
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
-        bottomNavigationView.selectedItemId = R.id.Inspiration
+        bottomNavigationView.selectedItemId = R.id.event
 
         bottomNavigationView.setOnNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
@@ -61,6 +61,7 @@ class Fontes_Inspiracao : AppCompatActivity() {
                 }
                 R.id.Inspiration -> {
                     startActivity(Intent(this, Fontes_Inspiracao::class.java))
+                    overridePendingTransition(0, 0)
                     true
                 }
                 R.id.profile -> {
@@ -73,24 +74,38 @@ class Fontes_Inspiracao : AppCompatActivity() {
         }
     }
 
-    private fun carregarFontesInspiracao(){
+    private fun carregarEventosUsuarioLogado() {
+        val userId = FirebaseAuth.getInstance().currentUser?.uid
 
-        db.collection("Fonte_Inspiracao").get().addOnSuccessListener { documents ->
+        if (userId != null) {
+            db.collection("eventos")
+                .whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener { documents ->
+                    eventosList.clear()
+                    for (document in documents) {
+                        val id = document.id
+                        val titulo = document.getString("titulo") ?: "Sem título"
+                        eventosList.add(Pair(id, titulo))
+                    }
 
-            fontesList.clear()
-            for (document in documents)
-            {
-                val id = document.id
-                val titulo = document.getString("Titulo") ?: "Sem título"
-                fontesList.add(Pair(id,titulo))
-            }
-            val titulos = fontesList.map{ it.second }
-            val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, titulos)
-            binding.eventList.adapter = arrayAdapter
+                    if (eventosList.isNotEmpty()) {
+                        val titulos = eventosList.map { it.second }
+                        val arrayAdapter = ArrayAdapter(this, android.R.layout.simple_list_item_1, titulos)
+                        binding.eventList.adapter = arrayAdapter
+
+                        arrayAdapter.notifyDataSetChanged()
+                    } else {
+                        Toast.makeText(this, "Nenhum evento encontrado", Toast.LENGTH_SHORT).show()
+                    }
+                }
+                .addOnFailureListener { exception ->
+                    Toast.makeText(this, "Erro ao carregar eventos: ${exception.message}", Toast.LENGTH_LONG).show()
+                }
+        } else {
+            Toast.makeText(this, "Usuário não autenticado", Toast.LENGTH_SHORT).show()
         }
-            .addOnFailureListener { exception ->
-                Toast.makeText(this, "Erro ao carregar fontes: ${exception.message}", Toast.LENGTH_LONG).show()
-            }
     }
+
 
 }

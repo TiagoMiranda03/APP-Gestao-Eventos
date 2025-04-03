@@ -39,6 +39,16 @@ class Selecionar_Convidados_Fragment : Fragment() {
 
         binding.btProximoPasso.setOnClickListener {
             adicionarConvidadosNoEvento(binding.containerConvidados)
+
+            val fragment = Selecionar_Fornecedor_Fragment.newInstance()
+            val bundle = Bundle()
+            bundle.putString("eventoId", eventoId)
+            fragment.arguments = bundle
+
+            val transaction = parentFragmentManager.beginTransaction()
+            transaction.replace(R.id.fragmentContainer, fragment)
+            transaction.addToBackStack(null)
+            transaction.commit()
         }
 
         return binding.root
@@ -57,7 +67,7 @@ class Selecionar_Convidados_Fragment : Fragment() {
                 adicionarConvidados(binding.containerConvidados, listaConvidados)
             }
             .addOnFailureListener { exception ->
-                Toast.makeText(context, "Erro ao buscar convidados: ${exception.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Erro ao encontrar  convidados: ${exception.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
