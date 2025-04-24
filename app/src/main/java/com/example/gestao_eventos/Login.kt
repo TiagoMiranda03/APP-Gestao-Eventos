@@ -55,14 +55,19 @@ class Login : AppCompatActivity() {
         auth.signInWithEmailAndPassword(email, password)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    Toast.makeText(this, "Login bem-sucedido!", Toast.LENGTH_SHORT).show()
-                    val intent = Intent(this, Perfil::class.java)
-                    startActivity(intent)
-                    finish()
-                } else {
-                    val errorMessage = task.exception?.localizedMessage ?: "Erro desconhecido"
-                    Toast.makeText(this, "Erro: $errorMessage", Toast.LENGTH_LONG).show()
+                    val user = auth.currentUser
+                    if (user != null && user.isEmailVerified) {
+                        Toast.makeText(this, "Login bem-sucedido!", Toast.LENGTH_SHORT).show()
+                        val intent = Intent(this, MainActivity::class.java)
+                        startActivity(intent)
+                        finish()
+                    } else {
+                        Toast.makeText(this, "Verifique o seu email antes de fazer login.", Toast.LENGTH_LONG).show()
+                        auth.signOut()
+                    }
                 }
+            }.addOnFailureListener {
+                Toast.makeText(this, "Erro ao dar login!", Toast.LENGTH_SHORT).show()
             }
     }
 }

@@ -47,13 +47,14 @@ class Fontes_Inspiracao : AppCompatActivity() {
         bottomNavigationView.setOnNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.home -> {
+                    startActivity(Intent(this, MainActivity::class.java))
+                    overridePendingTransition(0, 0)
                     true
                 }
                 R.id.event -> {
 
                     startActivity(Intent(this, Eventos::class.java))
                     overridePendingTransition(0, 0)
-                    //startActivity(Intent(this, EventActivity::class.java))
                     true
                 }
                 R.id.newevent -> {
@@ -63,6 +64,7 @@ class Fontes_Inspiracao : AppCompatActivity() {
                 }
                 R.id.Inspiration -> {
                     startActivity(Intent(this, Fontes_Inspiracao::class.java))
+                    overridePendingTransition(0, 0)
                     true
                 }
                 R.id.profile -> {

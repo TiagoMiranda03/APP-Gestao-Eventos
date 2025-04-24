@@ -121,29 +121,6 @@
                 android:src="@drawable/ic_arrow_perfil" />
         </RelativeLayout>
 
-        <!-- Teste-->
-        <RelativeLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="16dp"
-            android:background="@drawable/bottom_line_background">
-
-            <TextView
-                android:id="@+id/tvteste"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="MandarEmail"
-                android:textSize="16sp"
-                android:textColor="@android:color/black" />
-
-            <ImageView
-                android:id="@+id/ivteste"
-                android:layout_width="24dp"
-                android:layout_height="24dp"
-                android:layout_alignParentEnd="true"
-                android:src="@drawable/ic_arrow_perfil" />
-        </RelativeLayout>
-
         <!-- Logout -->
         <RelativeLayout
             android:layout_width="match_parent"

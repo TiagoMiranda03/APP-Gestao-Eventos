@@ -81,38 +81,52 @@ class Registo : AppCompatActivity() {
 
             }
 
-            auth.createUserWithEmailAndPassword(email,password).addOnCompleteListener{task ->
-                if (task.isSuccessful){
-                    val userId = auth.currentUser?.uid
+            auth.createUserWithEmailAndPassword(email, password).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
 
-                    val user = hashMapOf(
-                        "userId" to userId,
-                        "nome" to nome,
-                        "email" to email,
-                        "dataNascimento" to dataNascimento,
-                        "role" to "utilizador"
-                    )
+                    user?.sendEmailVerification()
+                        ?.addOnCompleteListener { verifyTask ->
+                            if (verifyTask.isSuccessful) {
+                                val userId = user.uid
 
-                    db.collection("users").document(userId!!)
-                        .set(user)
-                        .addOnSuccessListener {
-                            Log.d("Firestore", "Utilizador guardado com sucesso!")
-                            Toast.makeText(this, "Utilizador guardado com sucesso!", Toast.LENGTH_SHORT).show()
+                                //Encriptação dos dados
+                                val encryptedNome = CryptoUtils.encrypt(nome)
+                                val encryptedEmail = CryptoUtils.encrypt(email)
+                                val encryptedDob   = CryptoUtils.encrypt(dataNascimento)
+                                val encryptedRole  = CryptoUtils.encrypt("utilizador")
 
+                                val userData = hashMapOf(
+                                    "userId" to userId,
+                                    "nome" to encryptedNome,
+                                    "email" to encryptedEmail,
+                                    "dataNascimento" to encryptedDob,
+                                    "role" to encryptedRole
+                                )
 
-                            val intent = Intent(this, Perfil::class.java)
-                            startActivity(intent)
-                            finish()
+                                db.collection("users").document(userId)
+                                    .set(userData)
+                                    .addOnSuccessListener {
+                                        Toast.makeText(this, "Verifique o seu email para ativar a conta.", Toast.LENGTH_LONG).show()
+                                        auth.signOut() // Desconecta o utilizador até verificar o email
+                                        val intent = Intent(this, Login::class.java)
+                                        startActivity(intent)
+                                        finish()
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Toast.makeText(this, "Erro ao guardar utilizador", Toast.LENGTH_SHORT).show()
+                                        Log.w("Firestore", "Erro ao guardar utilizador", e)
+                                    }
+                            } else {
+                                Toast.makeText(this, "Erro ao enviar email de verificação", Toast.LENGTH_SHORT).show()
+                            }
                         }
-                        .addOnFailureListener{ e ->
-                            Log.w("Firestore", "Erro ao guardar utilizador", e)
-                            Toast.makeText(this, "Erro ao guardar utilizador", Toast.LENGTH_SHORT).show()
-                        }
-                }else{
-                    Log.e("Auth", "Erro ao registar: ${task.exception?.message}")
+                } else {
                     Toast.makeText(this, "Erro ao registar utilizador", Toast.LENGTH_SHORT).show()
+                    Log.e("Auth", "Erro ao registar: ${task.exception?.message}")
                 }
             }
+
         }
     }
 

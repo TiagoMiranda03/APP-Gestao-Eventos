@@ -54,15 +54,25 @@ class CriarEvento : AppCompatActivity() {
                 return@setOnClickListener
             }
 
+            val tituloEncrypted = CryptoUtils.encrypt(titulo)
+            val descricaoEncrypted = CryptoUtils.encrypt(descricao)
+            val tipoEventoEncrypted = CryptoUtils.encrypt(tipoEvento)
+            val dataInicioEncrypted = CryptoUtils.encrypt(dataInicio)
+            val dataFimEncrypted = CryptoUtils.encrypt(dataFim)
+            val horaInicioEncrypted = CryptoUtils.encrypt(horaInicio)
+            val horaFimEncrypted = CryptoUtils.encrypt(horaFim)
+            val localizacaoEncrypted = CryptoUtils.encrypt(localizacao)
+
+
             val evento = hashMapOf(
-                "titulo" to titulo,
-                "descricao" to descricao,
-                "tipoEvento" to tipoEvento,
-                "dataInicio" to dataInicio,
-                "dataFim" to dataFim,
-                "horaInicio" to horaInicio,
-                "horaFim" to horaFim,
-                "localizacao" to localizacao,
+                "titulo" to tituloEncrypted,
+                "descricao" to descricaoEncrypted,
+                "tipoEvento" to tipoEventoEncrypted,
+                "dataInicio" to dataInicioEncrypted,
+                "dataFim" to dataFimEncrypted,
+                "horaInicio" to horaInicioEncrypted,
+                "horaFim" to horaFimEncrypted,
+                "localizacao" to localizacaoEncrypted,
                 "userId" to userId
             )
 
@@ -98,8 +108,8 @@ class CriarEvento : AppCompatActivity() {
         bottomNavigationView.setOnNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.home -> {
-                    // Navegar para o HomeFragment ou outra Activity
-                    //startActivity(Intent(this, HomeActivity::class.java))
+                    startActivity(Intent(this, MainActivity::class.java))
+                    overridePendingTransition(0, 0)
                     true
                 }
                 R.id.event -> {

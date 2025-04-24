@@ -1,18 +1,27 @@
 package com.example.gestao_eventos
 
+import android.Manifest
+import android.annotation.SuppressLint
+import android.content.pm.PackageManager
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AlertDialog
+import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.example.gestao_eventos.databinding.FragmentSelecionarFornecedorBinding
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
@@ -21,11 +30,15 @@ import okhttp3.RequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.IOException
+import kotlin.math.pow
 
 class Selecionar_Fornecedor_Fragment : Fragment() {
 
     private var _binding: FragmentSelecionarFornecedorBinding? = null
     private val binding get() = _binding!!
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private var userLatitude: Double?= null
+    private var userLongitude: Double?= null
 
     private lateinit var db: FirebaseFirestore
     private lateinit var eventoId: String
@@ -43,6 +56,9 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
         _binding = FragmentSelecionarFornecedorBinding.inflate(inflater, container, false)
         db = FirebaseFirestore.getInstance()
 
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(requireActivity())
+        verificarPermissaoLocalizacao()
+
         eventoId = arguments?.getString("eventoId") ?: ""
 
         carregarFornecedores()
@@ -53,63 +69,278 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
 
         }
 
+        val opcoes = listOf("Todos","Ordenar por nome", "Ordenar por distância")
+        val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_item, opcoes)
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+        binding.spinnerOrdenar.adapter = adapter
+
+        binding.spinnerOrdenar.onItemSelectedListener = object :AdapterView.OnItemSelectedListener{
+            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long){
+                when(position){
+                    0 -> carregarFornecedores()
+                    1 -> ordenarPorNome()
+                    2 -> ordenarPorDistancia()
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+
+            }
+        }
+
         return binding.root
     }
+
+    private fun ordenarPorNome(){
+        db.collection("Fornecedores")
+            .get()
+            .addOnSuccessListener { result ->
+            val listaFornecedores = mutableListOf<Map<String, String>>()
+            for (doc in result){
+                val fornecedor = mapOf(
+                    "nome" to (doc.getString("Nome") ?: ""),
+                    "localizacao" to (doc.getString("Localização") ?: ""),
+                    "contacto" to (doc.getString("Contacto") ?: ""),
+                    "preco" to (doc.getString("Preço") ?: ""),
+                    "tipoServico" to (doc.getString("Tipo_Serviço") ?: "")
+                )
+                listaFornecedores.add(fornecedor)
+            }
+            val fornecedoresOrdenados = listaFornecedores.sortedBy { it["nome"]?.lowercase() }
+            adicionarFornecedores(binding.containerFornecedor, fornecedoresOrdenados)
+        }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Erro ao ordenar por nome: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun ordenarPorDistancia() {
+        if (userLatitude == null || userLongitude == null) {
+            Toast.makeText(context, "Localização atual não disponível", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        db.collection("Fornecedores")
+            .get()
+            .addOnSuccessListener { result ->
+                val listaFornecedores = mutableListOf<Map<String, Any>>()
+
+                for (doc in result) {
+                    val latitude = doc.getString("Latitude")
+                    val longitude = doc.getString("Longitude")
+
+                    if (!latitude.isNullOrBlank() && !longitude.isNullOrBlank()) {
+                        try {
+                            val lat = latitude.toDouble()
+                            val lon = longitude.toDouble()
+
+                            val distancia = calcularDistancia(userLatitude!!, userLongitude!!, lat, lon)
+
+                            val fornecedor = mapOf(
+                                "nome" to (doc.getString("Nome") ?: ""),
+                                "localizacao" to (doc.getString("Localização") ?: ""),
+                                "contacto" to (doc.getString("Contacto") ?: ""),
+                                "preco" to (doc.getString("Preço") ?: ""),
+                                "tipoServico" to (doc.getString("Tipo_Serviço") ?: ""),
+                                "distancia" to distancia
+                            )
+
+                            listaFornecedores.add(fornecedor)
+                        } catch (e: Exception) {
+                            Log.e("OrdenarDistancia", "Erro ao converter coordenadas: ${e.message}")
+                        }
+                    }
+                }
+
+                val listaOrdenada = listaFornecedores.sortedBy { it["distancia"] as Double }
+
+                // Atualizar o UI
+                val containerFornecedor = view?.findViewById<LinearLayout>(R.id.containerFornecedor)
+                containerFornecedor?.removeAllViews()
+                for (fornecedor in listaOrdenada) {
+                    val view = criarCardFornecedor(fornecedor) // função que cria a View
+                    containerFornecedor?.addView(view)
+                }
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(
+                    context,
+                    "Erro ao buscar fornecedores: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+    }
+
+    private fun calcularDistancia(lat1: Double, lon1: Double, lat2: Double, lon2: Double): Double {
+        val R = 6371.0
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLon = Math.toRadians(lon2 - lon1)
+        val a = Math.sin(dLat / 2).pow(2.0) + Math.cos(Math.toRadians(lat1)) *
+                Math.cos(Math.toRadians(lat2)) * Math.sin(dLon / 2).pow(2.0)
+        val c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+        return R * c
+    }
+
+    private fun criarCardFornecedor(fornecedor: Map<String, Any>): View {
+        val fornecedorView = layoutInflater.inflate(R.layout.item_fornecedor, null, false)
+
+        val txtNome = fornecedorView.findViewById<TextView>(R.id.txtNomeFornecedor)
+        val txtLocalizacao = fornecedorView.findViewById<TextView>(R.id.txtLocalizacaoFornecedor)
+        val txtCategoriaFornecedor = fornecedorView.findViewById<TextView>(R.id.txtCategoriaFornecedor)
+        val txtContactoFornecedor = fornecedorView.findViewById<TextView>(R.id.txtContactoFornecedor)
+        val txtPrecoFornecedor = fornecedorView.findViewById<TextView>(R.id.txtPrecoFornecedor)
+        val checkBoxSelecionado = fornecedorView.findViewById<CheckBox>(R.id.checkBoxSelecionado)
+
+        txtNome.text = fornecedor["nome"] as? String ?: ""
+        txtLocalizacao.text = "Localização: " + (fornecedor["localizacao"] as? String ?: "")
+        txtCategoriaFornecedor.text = "Tipo de Fornecedor: " + (fornecedor["tipoServico"] as? String ?: "")
+        txtContactoFornecedor.text = "Contacto: " + (fornecedor["contacto"] as? String ?: "")
+        txtPrecoFornecedor.text = "Preço: " + (fornecedor["preco"] as? String ?: "") + "€"
+
+        // Lógica opcional para guardar fornecedor ao ser selecionado
+        checkBoxSelecionado.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                adicionarFornecedorCompletos(
+                    mapOf(
+                        "nome" to (fornecedor["nome"] as? String ?: ""),
+                        "localizacao" to (fornecedor["localizacao"] as? String ?: ""),
+                        "contacto" to (fornecedor["contacto"] as? String ?: ""),
+                        "preco" to (fornecedor["preco"] as? String ?: ""),
+                        "tipoServico" to (fornecedor["tipoServico"] as? String ?: "")
+                    )
+                )
+            }
+        }
+
+        return fornecedorView
+    }
+
+
+    private fun verificarPermissaoLocalizacao(){
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.ACCESS_FINE_LOCATION)
+            == PackageManager.PERMISSION_GRANTED) {
+            obterLocalizacaoAtual()
+        } else {
+            requestPermissions(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 1001)
+        }
+    }
+
+    @SuppressLint("MissingPermission")
+    private fun obterLocalizacaoAtual() {
+        val locationRequest = com.google.android.gms.location.LocationRequest.create().apply {
+            interval = 10000
+            fastestInterval = 5000
+            priority = com.google.android.gms.location.LocationRequest.PRIORITY_HIGH_ACCURACY
+            numUpdates = 1
+        }
+
+        fusedLocationClient.requestLocationUpdates(locationRequest, object : com.google.android.gms.location.LocationCallback() {
+            override fun onLocationResult(locationResult: com.google.android.gms.location.LocationResult) {
+                val location = locationResult.lastLocation
+                if (location != null) {
+                    userLatitude = location.latitude
+                    userLongitude = location.longitude
+                    Log.d("Localizacao", "Latitude: $userLatitude, Longitude: $userLongitude")
+                    Toast.makeText(requireContext(), "Lat: $userLatitude, Lon: $userLongitude", Toast.LENGTH_LONG).show()
+                } else {
+                    Log.d("Localizacao", "Localização ainda não disponível.")
+                    Toast.makeText(requireContext(), "Localização ainda não disponível.", Toast.LENGTH_LONG).show()
+                }
+            }
+        }, requireActivity().mainLooper)
+    }
+
+
 
     private fun carregarFornecedores() {
         db.collection("Fornecedores")
             .get()
             .addOnSuccessListener { result ->
-                val listaFornecedores = mutableListOf<Pair<String, String>>()
+                val listaFornecedores = mutableListOf<Map<String, String>>()
                 for (doc in result) {
-                    val nome = doc.getString("Nome") ?: ""
-                    val localizacao = doc.getString("Localização") ?: ""
-                    listaFornecedores.add(Pair(nome, localizacao))
+                    val fornecedor = mapOf(
+                        "nome" to (doc.getString("Nome") ?: ""),
+                        "localizacao" to (doc.getString("Localização") ?: ""),
+                        "contacto" to (doc.getString("Contacto") ?: ""),
+                        "preco" to (doc.getString("Preço") ?: ""),
+                        "tipoServico" to (doc.getString("Tipo_Serviço") ?: "")
+                    )
+                    listaFornecedores.add(fornecedor)
                 }
 
                 if (listaFornecedores.isEmpty()) {
                     Toast.makeText(context, "Nenhum fornecedor encontrado!", Toast.LENGTH_SHORT).show()
                 } else {
-                    Toast.makeText(context, "Fornecedores encontrados!", Toast.LENGTH_SHORT).show()
-
                     adicionarFornecedores(binding.containerFornecedor, listaFornecedores)
                 }
             }
-            .addOnFailureListener { exception ->
-                Toast.makeText(context, "Erro ao buscar fornecedores: ${exception.message}", Toast.LENGTH_SHORT).show()
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Erro ao buscar fornecedores: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
-
-    private fun adicionarFornecedores(container: LinearLayout, fornecedores: List<Pair<String,String>>){
+    private fun adicionarFornecedores(container: LinearLayout, fornecedores: List<Map<String, String>>) {
         container.removeAllViews() // Limpa os fornecedores anteriores
 
-        for ((nome, localizacao) in fornecedores) {
+        for (fornecedor in fornecedores) {
             val fornecedorView = layoutInflater.inflate(R.layout.item_fornecedor, container, false)
 
             val txtNome = fornecedorView.findViewById<TextView>(R.id.txtNomeFornecedor)
             val txtLocalizacao = fornecedorView.findViewById<TextView>(R.id.txtLocalizacaoFornecedor)
+            val txtCategoriaFornecedor = fornecedorView.findViewById<TextView>(R.id.txtCategoriaFornecedor)
+            val txtContactoFornecedor =  fornecedorView.findViewById<TextView>(R.id.txtContactoFornecedor)
+            val txtPrecoFornecedor = fornecedorView.findViewById<TextView>(R.id.txtPrecoFornecedor)
             val checkBoxSelecionado = fornecedorView.findViewById<CheckBox>(R.id.checkBoxSelecionado)
 
-            txtNome.text = nome
-            txtLocalizacao.text = localizacao
+            txtNome.text = fornecedor["nome"]
+            txtLocalizacao.text = "Localização: " + fornecedor["localizacao"]
+            txtCategoriaFornecedor.text = "Tipo de Fornecedor: "+fornecedor["tipoServico"]
+            txtPrecoFornecedor.text = "Preço: "+fornecedor["preco"] + "€"
+            txtContactoFornecedor.text = "Contacto: " + fornecedor["contacto"]
 
             container.addView(fornecedorView)
+
+            // Quando o fornecedor for selecionado, adicionar os dados completos
+            checkBoxSelecionado.setOnCheckedChangeListener { _, isChecked ->
+                if (isChecked) {
+                    adicionarFornecedorCompletos(fornecedor)
+                }
+            }
         }
     }
 
-    private fun adicionarFornecedoresNoEvento(container: LinearLayout){
-        val fornecedoresSelecionados = mutableListOf<HashMap<String,String>>()
+    private fun adicionarFornecedorCompletos(fornecedor: Map<String, String>) {
+        val fornecedorCompletos = hashMapOf(
+            "nome" to fornecedor["nome"],
+            "localizacao" to fornecedor["localizacao"],
+            "contacto" to fornecedor["contacto"],
+            "preco" to fornecedor["preco"],
+            "tipo_servico" to fornecedor["tipoServico"]
+        )
+
+        // Agora, adicionamos esses dados ao evento
+        db.collection("eventos").document(eventoId)
+            .update("fornecedores", FieldValue.arrayUnion(fornecedorCompletos))
+            .addOnSuccessListener {
+                Toast.makeText(context, "Fornecedor adicionado ao evento!", Toast.LENGTH_SHORT).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(context, "Erro ao adicionar fornecedor: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun adicionarFornecedoresNoEvento(container: LinearLayout) {
+        val fornecedoresSelecionados = mutableListOf<Map<String, String>>()
 
         for (i in 0 until container.childCount) {
             val fornecedorView = container.getChildAt(i)
             val checkBox = fornecedorView.findViewById<CheckBox>(R.id.checkBoxSelecionado)
 
-            if(checkBox.isChecked){
+            if (checkBox.isChecked) {
                 val nome = fornecedorView.findViewById<TextView>(R.id.txtNomeFornecedor)
                 val localizacao = fornecedorView.findViewById<TextView>(R.id.txtLocalizacaoFornecedor)
 
-                val fornecedor = hashMapOf(
+                val fornecedor = mapOf(
                     "nome" to nome.text.toString(),
                     "localizacao" to localizacao.text.toString()
                 )
@@ -117,21 +348,20 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
             }
         }
 
-        if (fornecedoresSelecionados.isNotEmpty()){
+        if (fornecedoresSelecionados.isNotEmpty()) {
             db.collection("eventos").document(eventoId)
                 .update("fornecedores", fornecedoresSelecionados)
                 .addOnSuccessListener {
-                    Toast.makeText(context, "Convidados adicionados ao evento!", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Fornecedores adicionados ao evento!", Toast.LENGTH_SHORT).show()
                 }
                 .addOnFailureListener { e ->
-                    Toast.makeText(context, "Erro ao adicionar convidados: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Erro ao adicionar fornecedores: ${e.message}", Toast.LENGTH_SHORT).show()
                 }
-
-        }
-        else {
-            Toast.makeText(context, "Selecione ao menos um Fornecedor", Toast.LENGTH_SHORT).show()
+        } else {
+            Toast.makeText(context, "Selecione ao menos um fornecedor", Toast.LENGTH_SHORT).show()
         }
     }
+
 
     private fun mostrarDialogConfirmacao()
     {
@@ -174,6 +404,15 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
                     val dataInicio = document.getString("dataInicio") ?:"Sem dataInicio"
                     val dataFim = document.getString("dataFim") ?:"Sem dataFim"
 
+                    val tituloDesencriptado = CryptoUtils.decrypt(tituloEvento)
+                    val tipoDesencriptado = CryptoUtils.decrypt(tipoEvento)
+                    val HoraInicioDesencriptado = CryptoUtils.decrypt(horaInicioEvento)
+                    val horaFimDesencriptado = CryptoUtils.decrypt(horaFimEvento)
+                    val LocalizacaoDesencriptado = CryptoUtils.decrypt(localizacaoEvento)
+                    val descricaoDesencriptado = CryptoUtils.decrypt(descricao)
+                    val dataInicioDesencriptado = CryptoUtils.decrypt(dataInicio)
+                    val dataFimDesencriptado = CryptoUtils.decrypt(dataFim)
+
                     val fornecedores = document.get("fornecedores") as? List<Map<String, String>> ?: emptyList()
                     val convidados = document.get("convidados") as? List<Map<String, String>> ?: emptyList()
 
@@ -182,21 +421,23 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
                     }
 
                     val convidadosHtml = convidados.joinToString("") {
-                        "<li>${it["nome"]} - ${it["email"]}</li>"
+                        val nomeDesencriptado = CryptoUtils.decrypt(it["nome"] ?: "")
+                        val emailDesencriptado = CryptoUtils.decrypt(it["email"] ?: "")
+                        "<li>$nomeDesencriptado - $emailDesencriptado</li>"
                     }
 
                     val corpoEmail = """
                     <html>
                         <body>
                             <h2>Detalhes do Evento</h2>
-                            <p><strong>Titulo:</strong> $tituloEvento</p>
-                            <p><strong>Tipo de Evento:</strong> $tipoEvento</p>
-                            <p><strong>Descrição:</strong> $descricao</p>
-                            <p><strong>Local:</strong> $localizacaoEvento</p>
-                            <p><strong>Hora de Inicio:</strong> $horaInicioEvento</p>
-                            <p><strong>Hora de Fim:</strong> $horaFimEvento</p>
-                            <p><strong>Data de Inicio:</strong> $dataInicio</p>
-                            <p><strong>Data de Fim:</strong> $dataFim</p>
+                            <p><strong>Titulo:</strong> $tituloDesencriptado</p>
+                            <p><strong>Tipo de Evento:</strong> $tipoDesencriptado</p>
+                            <p><strong>Descrição:</strong> $descricaoDesencriptado</p>
+                            <p><strong>Local:</strong> $LocalizacaoDesencriptado</p>
+                            <p><strong>Hora de Inicio:</strong> $HoraInicioDesencriptado</p>
+                            <p><strong>Hora de Fim:</strong> $horaFimDesencriptado</p>
+                            <p><strong>Data de Inicio:</strong> $dataInicioDesencriptado</p>
+                            <p><strong>Data de Fim:</strong> $dataFimDesencriptado</p>
 
                             <h3>Fornecedores Selecionados:</h3>
                             <ul>$fornecedoresHtml</ul>

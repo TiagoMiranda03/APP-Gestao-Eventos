@@ -44,7 +44,6 @@ class EditarPerfil : Fragment() {
         binding.btnGuardar.setOnClickListener{
             guardarAlteracoes()
         }
-
     }
 
     private fun carregarDadosPerfil(){
@@ -58,13 +57,19 @@ class EditarPerfil : Fragment() {
                 .addOnSuccessListener { document ->
                     if (document.exists())
                     {
-                        val nome = document.getString("nome") ?: "Utilizador"
-                        val email = document.getString("email") ?: "email@dominio.com"
-                        val dn = document.getString("dataNascimento")
+                        val nomeEncriptado = document.getString("nome") ?: "Utilizador"
+                        val emailEncriptado = document.getString("email") ?: "email@dominio.com"
+                        val dnEncriptado = document.getString("dataNascimento") ?: ""
 
-                        binding.etNome.setText(nome)
-                        binding.etEmail.setText(email)
-                        binding.etDataNascimento.setText(dn)
+                        val nomeDesencriptado = CryptoUtils.decrypt(nomeEncriptado)
+                        val emailDesencriptado = CryptoUtils.decrypt(emailEncriptado)
+                        val dnDesencriptado = CryptoUtils.decrypt(dnEncriptado)
+
+
+
+                        binding.etNome.setText(nomeDesencriptado)
+                        binding.etEmail.setText(emailDesencriptado)
+                        binding.etDataNascimento.setText(dnDesencriptado)
                     }
                 }
         }
@@ -81,11 +86,14 @@ class EditarPerfil : Fragment() {
         if (user != null)
         {
             val userId = user.uid
+            val NomeEncriptado = CryptoUtils.encrypt(nome)
+            val EmailEncriptado = CryptoUtils.encrypt(email)
+            val DNEncriptado = CryptoUtils.encrypt(dn)
 
             val userData = mapOf(
-                "nome" to nome,
-                "email" to email,
-                "dataNascimento" to dn
+                "nome" to NomeEncriptado,
+                "email" to EmailEncriptado,
+                "dataNascimento" to DNEncriptado
             )
 
             db.collection("users").document(userId).update(userData)

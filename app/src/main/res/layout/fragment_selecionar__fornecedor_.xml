@@ -5,24 +5,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/white"
+    android:background="#ffeeff"
     tools:context=".Selecionar_Fornecedor_Fragment">
 
-    <RelativeLayout
+    <!-- Pesquisa + Filtro lado a lado -->
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="16dp">
+        android:orientation="horizontal"
+        android:padding="16dp"
+        android:gravity="center_vertical">
 
         <androidx.appcompat.widget.SearchView
             android:id="@+id/searchView"
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
+            android:layout_weight="1"
             android:queryHint="Pesquisar..."
             android:iconifiedByDefault="false"
-            android:background="@android:color/white"
-            android:padding="8dp"/>
+            android:background="#ffeeff"
+            android:padding="8dp" />
 
-    </RelativeLayout>
+        <Spinner
+            android:id="@+id/spinnerOrdenar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:spinnerMode="dropdown"/>
+    </LinearLayout>
 
     <ScrollView
         android:layout_width="match_parent"
@@ -34,7 +44,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp"/>
+            android:padding="16dp" />
     </ScrollView>
 
     <Button

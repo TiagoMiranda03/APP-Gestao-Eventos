@@ -10,6 +10,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.gestao_eventos.databinding.FragmentSelecionarConvidadosBinding
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 class Selecionar_Convidados_Fragment : Fragment() {
@@ -37,6 +38,15 @@ class Selecionar_Convidados_Fragment : Fragment() {
 
         carregarConvidados()
 
+        binding.btnAdicionarContato.setOnClickListener{
+            val fragment = ConvidadoNovo_Fragment.newInstance()
+
+            val transaction = parentFragmentManager.beginTransaction()
+            transaction.replace(R.id.fragmentContainer, fragment)
+            transaction.addToBackStack(null)
+            transaction.commit()
+        }
+
         binding.btProximoPasso.setOnClickListener {
             adicionarConvidadosNoEvento(binding.containerConvidados)
 
@@ -55,21 +65,33 @@ class Selecionar_Convidados_Fragment : Fragment() {
     }
 
     private fun carregarConvidados() {
-        db.collection("convidados")
-            .get()
-            .addOnSuccessListener { result ->
-                val listaConvidados = mutableListOf<Pair<String, String>>()
-                for (doc in result) {
-                    val nome = doc.getString("nome") ?: ""
-                    val email = doc.getString("email") ?: ""
-                    listaConvidados.add(Pair(nome, email))
+
+        val user = FirebaseAuth.getInstance().currentUser
+        val userId = user?.uid
+
+        if (userId != null){
+            db.collection("convidados")
+                .whereEqualTo("userId", userId)
+                .get()
+                .addOnSuccessListener { result ->
+                    val listaConvidados = mutableListOf<Pair<String, String>>()
+                    for (doc in result) {
+                        val nomeEncriptado = doc.getString("NomeConvidado") ?: ""
+                        val emailEncriptado = doc.getString("EmailConvidado") ?: ""
+
+                        val nome = CryptoUtils.decrypt(nomeEncriptado)
+                        val email = CryptoUtils.decrypt(emailEncriptado)
+                        listaConvidados.add(Pair(nome, email))
+                    }
+                    adicionarConvidados(binding.containerConvidados, listaConvidados)
                 }
-                adicionarConvidados(binding.containerConvidados, listaConvidados)
-            }
-            .addOnFailureListener { exception ->
-                Toast.makeText(context, "Erro ao encontrar  convidados: ${exception.message}", Toast.LENGTH_SHORT).show()
-                Toast.makeText(context, "Erro ao buscar convidados: ${exception.message}", Toast.LENGTH_SHORT).show()
-            }
+                .addOnFailureListener { exception ->
+                    Toast.makeText(context, "Erro ao encontrar  convidados: ${exception.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "Erro ao buscar convidados: ${exception.message}", Toast.LENGTH_SHORT).show()
+                }
+        }
+
+
     }
 
     private fun adicionarConvidados(container: LinearLayout, convidados: List<Pair<String, String>>) {
@@ -99,9 +121,12 @@ class Selecionar_Convidados_Fragment : Fragment() {
                 val nome = convidadoView.findViewById<TextView>(R.id.txtNome).text.toString()
                 val email = convidadoView.findViewById<TextView>(R.id.txtEmail).text.toString()
 
+                val nomeEncriptado = CryptoUtils.encrypt(nome)
+                val emailEncriptado = CryptoUtils.encrypt(email)
+
                 val convidado = hashMapOf(
-                    "nome" to nome,
-                    "email" to email
+                    "nome" to nomeEncriptado,
+                    "email" to emailEncriptado
                 )
                 convidadosSelecionados.add(convidado)
             }

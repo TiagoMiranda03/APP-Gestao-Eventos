@@ -32,14 +32,21 @@ class Eventos : AppCompatActivity() {
             val eventoSelecionado = eventosList[position]
             val idEvento = eventoSelecionado.first
 
+            // 1) Esconder a lista (e a barra de busca)
+            binding.eventList.visibility = View.GONE
+            binding.searchBar.visibility = View.GONE
+
+            // 2) Mostrar o container de fragmento
             binding.container.visibility = View.VISIBLE
 
-           val fragment = EventosDetalhe.newInstance(idEvento)
+            // 3) Carregar o fragmento de detalhe
+            val fragment = EventosDetalhe.newInstance(idEvento)
             supportFragmentManager.beginTransaction()
                 .replace(R.id.container, fragment)
                 .addToBackStack(null)
                 .commit()
         }
+
 
         val bottomNavigationView: BottomNavigationView = findViewById(R.id.bottomNavigationView)
         bottomNavigationView.selectedItemId = R.id.event
@@ -47,6 +54,8 @@ class Eventos : AppCompatActivity() {
         bottomNavigationView.setOnNavigationItemSelectedListener { menuItem ->
             when (menuItem.itemId) {
                 R.id.home -> {
+                    startActivity(Intent(this, MainActivity::class.java))
+                    overridePendingTransition(0, 0)
                     true
                 }
                 R.id.event -> {
@@ -86,7 +95,8 @@ class Eventos : AppCompatActivity() {
                     for (document in documents) {
                         val id = document.id
                         val titulo = document.getString("titulo") ?: "Sem título"
-                        eventosList.add(Pair(id, titulo))
+                        val tituloDesencriptado = CryptoUtils.decrypt(titulo)
+                        eventosList.add(Pair(id, tituloDesencriptado))
                     }
 
                     if (eventosList.isNotEmpty()) {
@@ -106,6 +116,4 @@ class Eventos : AppCompatActivity() {
             Toast.makeText(this, "Usuário não autenticado", Toast.LENGTH_SHORT).show()
         }
     }
-
-
 }
