@@ -8,7 +8,13 @@ import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.gestao_eventos.databinding.ActivityRegistoBinding
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount
+import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
+import com.google.android.gms.common.api.ApiException
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.Calendar
@@ -20,6 +26,8 @@ class Registo : AppCompatActivity() {
     private lateinit var auth: FirebaseAuth
     private lateinit var db: FirebaseFirestore
     private var calendar = Calendar.getInstance()
+    private lateinit var googleSignInClient: GoogleSignInClient
+    private val RC_SIGN_IN = 1001
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,6 +36,20 @@ class Registo : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         db = FirebaseFirestore.getInstance()
+
+        val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+            .requestIdToken(getString(R.string.default_web_client_id))
+            .requestEmail()
+            .build()
+
+        googleSignInClient = GoogleSignIn.getClient(this, gso)
+
+        binding.btnGoogleCustom.setOnClickListener {
+            googleSignInClient.signOut().addOnCompleteListener {
+                val signInIntent = googleSignInClient.signInIntent
+                startActivityForResult(signInIntent, RC_SIGN_IN)
+            }
+        }
 
         binding.ivDataNascimentoIcon.setOnClickListener{
             abrirCalendario()
@@ -129,6 +151,71 @@ class Registo : AppCompatActivity() {
 
         }
     }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+
+        if (requestCode == RC_SIGN_IN){
+            val task = GoogleSignIn.getSignedInAccountFromIntent(data)
+            try {
+                val account = task.getResult(ApiException::class.java)
+                if (account != null)
+                {
+                    firebaseAuthWithGoogle(account)
+                }
+            }catch (e: ApiException){
+                Toast.makeText(this, "Falha no login com Google", Toast.LENGTH_SHORT).show()
+                Log.e("GOOGLE_LOGIN", "Erro: ${e.statusCode}", e)
+            }
+        }
+    }
+
+    private fun firebaseAuthWithGoogle(account: GoogleSignInAccount) {
+        val credential = GoogleAuthProvider.getCredential(account.idToken, null)
+        auth.signInWithCredential(credential)
+            .addOnCompleteListener(this) { task ->
+                if (task.isSuccessful) {
+                    val user = auth.currentUser
+
+                    if (task.result?.additionalUserInfo?.isNewUser == true && user != null) {
+                        val userId = user.uid
+                        val nome = user.displayName ?: "Sem nome"
+                        val email = user.email ?: "Sem email"
+
+                        val encryptedNome = CryptoUtils.encrypt(nome)
+                        val encryptedEmail = CryptoUtils.encrypt(email)
+                        val encryptedDob   = CryptoUtils.encrypt("N/A")
+                        val encryptedRole  = CryptoUtils.encrypt("utilizador")
+
+                        val userData = hashMapOf(
+                            "userId" to userId,
+                            "nome" to encryptedNome,
+                            "email" to encryptedEmail,
+                            "dataNascimento" to encryptedDob,
+                            "role" to encryptedRole
+                        )
+
+                        db.collection("users").document(userId)
+                            .set(userData)
+                            .addOnSuccessListener {
+                                Toast.makeText(this, "Registo com Google concluído!", Toast.LENGTH_SHORT).show()
+                                startActivity(Intent(this, Login::class.java))
+                                finish()
+                            }
+                            .addOnFailureListener {
+                                Toast.makeText(this, "Erro ao guardar utilizador Google", Toast.LENGTH_SHORT).show()
+                            }
+                    } else {
+                        startActivity(Intent(this, Login::class.java))
+                        finish()
+                    }
+
+                } else {
+                    Toast.makeText(this, "Falha na autenticação com Google", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
+
 
     private fun abrirCalendario() {
         val ano = calendar.get(Calendar.YEAR)

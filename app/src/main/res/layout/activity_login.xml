@@ -141,4 +141,48 @@
         android:textSize="14sp"
         android:textColor="@android:color/black" />
 
+
+    <LinearLayout
+        android:id="@+id/btnGoogleCustom"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_below="@id/tvRegistar"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:background="@drawable/google_button_background"
+        android:elevation="2dp"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:weightSum="3">
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="match_parent"
+            android:layout_weight="0.2"
+            android:src="@drawable/ic_google_logo"
+            android:scaleType="centerInside"
+            android:contentDescription="Google logo" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="2.6"
+            android:gravity="center"
+            android:text="Continuar com Google"
+            android:textColor="#000000"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <ImageView
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_weight="0.2"
+            android:layout_gravity="center_vertical|end"
+            android:src="@drawable/ic_arrow_right"
+            android:scaleType="centerInside"
+            android:contentDescription="Seta" />
+    </LinearLayout>
+
+
 </RelativeLayout>

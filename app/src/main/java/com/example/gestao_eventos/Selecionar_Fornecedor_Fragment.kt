@@ -10,6 +10,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
+import android.widget.Button
 import android.widget.CheckBox
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -60,13 +61,11 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
         verificarPermissaoLocalizacao()
 
         eventoId = arguments?.getString("eventoId") ?: ""
-
         carregarFornecedores()
 
         binding.btFinalizar.setOnClickListener {
             adicionarFornecedoresNoEvento(binding.containerFornecedor)
             mostrarDialogConfirmacao()
-
         }
 
         val opcoes = listOf("Todos","Ordenar por nome", "Ordenar por distância")
@@ -74,22 +73,80 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         binding.spinnerOrdenar.adapter = adapter
 
-        binding.spinnerOrdenar.onItemSelectedListener = object :AdapterView.OnItemSelectedListener{
-            override fun onItemSelected(parent: AdapterView<*>, view: View, position: Int, id: Long){
-                when(position){
+        binding.spinnerOrdenar.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                when (position) {
                     0 -> carregarFornecedores()
                     1 -> ordenarPorNome()
                     2 -> ordenarPorDistancia()
                 }
             }
 
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-
-            }
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
         }
 
         return binding.root
     }
+
+    override fun onResume() {
+        super.onResume()
+        restaurarListaFornecedores()
+    }
+
+
+    fun restaurarListaFornecedores() {
+        binding.containerPesquisaFiltro.visibility = View.VISIBLE
+        binding.containerFornecedorScrollView.visibility = View.VISIBLE
+        binding.btFinalizar.visibility = View.VISIBLE
+        binding.fragmentContainerDetalhes.visibility = View.GONE
+    }
+
+    private fun adicionarFornecedoresNoEvento(container: LinearLayout) {
+        Log.d("DEBUG", "Adicionar Fornecedores ao Evento")
+
+        if (container == null) {
+            Log.e("DEBUG", "Container é NULL")
+            Toast.makeText(context, "Erro: Container de Fornecedores não encontrado!", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val fornecedoresSelecionados = mutableListOf<Map<String, String>>()
+
+        Log.d("DEBUG", "Total de Views no Container: ${container.childCount}")
+
+        for (i in 0 until container.childCount) {
+            val fornecedorView = container.getChildAt(i)
+            val checkBox = fornecedorView.findViewById<CheckBox>(R.id.checkBoxSelecionado)
+
+            if (checkBox?.isChecked == true) {
+                val nome = fornecedorView.findViewById<TextView>(R.id.txtNomeFornecedor)?.text.toString()
+                val localizacao = fornecedorView.findViewById<TextView>(R.id.txtLocalizacaoFornecedor)?.text.toString()
+
+                val fornecedor = mapOf(
+                    "nome" to nome,
+                    "localizacao" to localizacao
+                )
+                fornecedoresSelecionados.add(fornecedor)
+            }
+        }
+
+        Log.d("DEBUG", "Total de Fornecedores Selecionados: ${fornecedoresSelecionados.size}")
+
+        if (fornecedoresSelecionados.isNotEmpty()) {
+            db.collection("eventos").document(eventoId)
+                .update("fornecedores", fornecedoresSelecionados)
+                .addOnSuccessListener {
+                    Toast.makeText(context, "Fornecedores adicionados ao evento!", Toast.LENGTH_SHORT).show()
+                }
+                .addOnFailureListener { e ->
+                    Toast.makeText(context, "Erro ao adicionar fornecedores: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Log.e("DEBUG", "Erro ao adicionar fornecedores: ${e.message}")
+                }
+        } else {
+            Toast.makeText(context, "Selecione ao menos um fornecedor", Toast.LENGTH_SHORT).show()
+        }
+    }
+
 
     private fun ordenarPorNome(){
         db.collection("Fornecedores")
@@ -185,34 +242,44 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
         val fornecedorView = layoutInflater.inflate(R.layout.item_fornecedor, null, false)
 
         val txtNome = fornecedorView.findViewById<TextView>(R.id.txtNomeFornecedor)
-        val txtLocalizacao = fornecedorView.findViewById<TextView>(R.id.txtLocalizacaoFornecedor)
         val txtCategoriaFornecedor = fornecedorView.findViewById<TextView>(R.id.txtCategoriaFornecedor)
         val txtContactoFornecedor = fornecedorView.findViewById<TextView>(R.id.txtContactoFornecedor)
+        val txtLocalizacaoFornecedor = fornecedorView.findViewById<TextView>(R.id.txtLocalizacaoFornecedor)
         val txtPrecoFornecedor = fornecedorView.findViewById<TextView>(R.id.txtPrecoFornecedor)
-        val checkBoxSelecionado = fornecedorView.findViewById<CheckBox>(R.id.checkBoxSelecionado)
+        val btnVerMaisDetalhes = fornecedorView.findViewById<Button>(R.id.btnVerMaisDetalhes)
 
+        Log.d("DEBUG", "Fornecedor Card Criado")
+        Log.d("DEBUG", "Botão Ver Mais Detalhes: ${btnVerMaisDetalhes != null}")
+
+        // Preencher os dados
         txtNome.text = fornecedor["nome"] as? String ?: ""
-        txtLocalizacao.text = "Localização: " + (fornecedor["localizacao"] as? String ?: "")
-        txtCategoriaFornecedor.text = "Tipo de Fornecedor: " + (fornecedor["tipoServico"] as? String ?: "")
+        txtCategoriaFornecedor.text = "Categoria: " + (fornecedor["tipoServico"] as? String ?: "")
         txtContactoFornecedor.text = "Contacto: " + (fornecedor["contacto"] as? String ?: "")
+        txtLocalizacaoFornecedor.text = "Localização: " + (fornecedor["localizacao"] as? String ?: "")
         txtPrecoFornecedor.text = "Preço: " + (fornecedor["preco"] as? String ?: "") + "€"
 
-        // Lógica opcional para guardar fornecedor ao ser selecionado
-        checkBoxSelecionado.setOnCheckedChangeListener { _, isChecked ->
-            if (isChecked) {
-                adicionarFornecedorCompletos(
-                    mapOf(
-                        "nome" to (fornecedor["nome"] as? String ?: ""),
-                        "localizacao" to (fornecedor["localizacao"] as? String ?: ""),
-                        "contacto" to (fornecedor["contacto"] as? String ?: ""),
-                        "preco" to (fornecedor["preco"] as? String ?: ""),
-                        "tipoServico" to (fornecedor["tipoServico"] as? String ?: "")
-                    )
-                )
+        // Ao clicar no botão, abrir o fragmento de detalhes
+        btnVerMaisDetalhes.setOnClickListener {
+            val fornecedorId = fornecedor["id"] as? String
+            Log.d("DEBUG", "Botão Ver Mais Detalhes Clicado, Fornecedor ID: $fornecedorId")
+
+            if (!fornecedorId.isNullOrEmpty()) {
+                abrirDetalhesFornecedor(fornecedorId)
+            } else {
+                Toast.makeText(requireContext(), "ID do fornecedor não encontrado.", Toast.LENGTH_SHORT).show()
             }
         }
 
         return fornecedorView
+    }
+
+
+    private fun abrirDetalhesFornecedor(fornecedorId: String) {
+        val fragment = Detalhes_Fornecedores_Fragment.newInstance(fornecedorId)
+        parentFragmentManager.beginTransaction()
+            .replace(R.id.fragmentContainer, fragment)
+            .addToBackStack("DETALHES_FORNECEDOR")
+            .commit()
     }
 
 
@@ -250,15 +317,16 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
         }, requireActivity().mainLooper)
     }
 
-
-
     private fun carregarFornecedores() {
+        Log.d("DEBUG", "Iniciar carregamento de fornecedores")
+
         db.collection("Fornecedores")
             .get()
             .addOnSuccessListener { result ->
-                val listaFornecedores = mutableListOf<Map<String, String>>()
+                val listaFornecedores = mutableListOf<Map<String, Any>>()
                 for (doc in result) {
                     val fornecedor = mapOf(
+                        "id" to doc.id, // Inclui o ID do documento
                         "nome" to (doc.getString("Nome") ?: ""),
                         "localizacao" to (doc.getString("Localização") ?: ""),
                         "contacto" to (doc.getString("Contacto") ?: ""),
@@ -268,6 +336,8 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
                     listaFornecedores.add(fornecedor)
                 }
 
+                Log.d("DEBUG", "Fornecedores carregados: ${listaFornecedores.size}")
+
                 if (listaFornecedores.isEmpty()) {
                     Toast.makeText(context, "Nenhum fornecedor encontrado!", Toast.LENGTH_SHORT).show()
                 } else {
@@ -275,37 +345,20 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
                 }
             }
             .addOnFailureListener { e ->
+                Log.e("DEBUG", "Erro ao carregar fornecedores: ${e.message}")
                 Toast.makeText(context, "Erro ao buscar fornecedores: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 
-    private fun adicionarFornecedores(container: LinearLayout, fornecedores: List<Map<String, String>>) {
+
+    private fun adicionarFornecedores(container: LinearLayout, fornecedores: List<Map<String, Any>>) {
+        Log.d("DEBUG", "Adicionar Fornecedores: ${fornecedores.size}")
         container.removeAllViews() // Limpa os fornecedores anteriores
 
         for (fornecedor in fornecedores) {
-            val fornecedorView = layoutInflater.inflate(R.layout.item_fornecedor, container, false)
-
-            val txtNome = fornecedorView.findViewById<TextView>(R.id.txtNomeFornecedor)
-            val txtLocalizacao = fornecedorView.findViewById<TextView>(R.id.txtLocalizacaoFornecedor)
-            val txtCategoriaFornecedor = fornecedorView.findViewById<TextView>(R.id.txtCategoriaFornecedor)
-            val txtContactoFornecedor =  fornecedorView.findViewById<TextView>(R.id.txtContactoFornecedor)
-            val txtPrecoFornecedor = fornecedorView.findViewById<TextView>(R.id.txtPrecoFornecedor)
-            val checkBoxSelecionado = fornecedorView.findViewById<CheckBox>(R.id.checkBoxSelecionado)
-
-            txtNome.text = fornecedor["nome"]
-            txtLocalizacao.text = "Localização: " + fornecedor["localizacao"]
-            txtCategoriaFornecedor.text = "Tipo de Fornecedor: "+fornecedor["tipoServico"]
-            txtPrecoFornecedor.text = "Preço: "+fornecedor["preco"] + "€"
-            txtContactoFornecedor.text = "Contacto: " + fornecedor["contacto"]
-
+            val fornecedorView = criarCardFornecedor(fornecedor)
+            Log.d("DEBUG", "Fornecedor Adicionado ao Layout: ${fornecedor["nome"]}")
             container.addView(fornecedorView)
-
-            // Quando o fornecedor for selecionado, adicionar os dados completos
-            checkBoxSelecionado.setOnCheckedChangeListener { _, isChecked ->
-                if (isChecked) {
-                    adicionarFornecedorCompletos(fornecedor)
-                }
-            }
         }
     }
 
@@ -328,40 +381,6 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
                 Toast.makeText(context, "Erro ao adicionar fornecedor: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
-
-    private fun adicionarFornecedoresNoEvento(container: LinearLayout) {
-        val fornecedoresSelecionados = mutableListOf<Map<String, String>>()
-
-        for (i in 0 until container.childCount) {
-            val fornecedorView = container.getChildAt(i)
-            val checkBox = fornecedorView.findViewById<CheckBox>(R.id.checkBoxSelecionado)
-
-            if (checkBox.isChecked) {
-                val nome = fornecedorView.findViewById<TextView>(R.id.txtNomeFornecedor)
-                val localizacao = fornecedorView.findViewById<TextView>(R.id.txtLocalizacaoFornecedor)
-
-                val fornecedor = mapOf(
-                    "nome" to nome.text.toString(),
-                    "localizacao" to localizacao.text.toString()
-                )
-                fornecedoresSelecionados.add(fornecedor)
-            }
-        }
-
-        if (fornecedoresSelecionados.isNotEmpty()) {
-            db.collection("eventos").document(eventoId)
-                .update("fornecedores", fornecedoresSelecionados)
-                .addOnSuccessListener {
-                    Toast.makeText(context, "Fornecedores adicionados ao evento!", Toast.LENGTH_SHORT).show()
-                }
-                .addOnFailureListener { e ->
-                    Toast.makeText(context, "Erro ao adicionar fornecedores: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-        } else {
-            Toast.makeText(context, "Selecione ao menos um fornecedor", Toast.LENGTH_SHORT).show()
-        }
-    }
-
 
     private fun mostrarDialogConfirmacao()
     {
@@ -505,8 +524,6 @@ class Selecionar_Fornecedor_Fragment : Fragment() {
             }
         })
     }
-
-
 
     override fun onDestroyView() {
         super.onDestroyView()

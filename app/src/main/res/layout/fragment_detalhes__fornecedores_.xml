@@ -1,0 +1,117 @@
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#ffeeff"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center_horizontal">
+
+        <!-- Botão Voltar e Título -->
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="16dp">
+
+            <ImageView
+                android:id="@+id/ivBack"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:src="@drawable/ic_back"
+                android:layout_alignParentStart="true"
+                android:contentDescription="Voltar" />
+
+            <TextView
+                android:id="@+id/tvTitleFornecedor"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Detalhes do Fornecedor"
+                android:textSize="24sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/black"
+                android:layout_centerHorizontal="true" />
+        </RelativeLayout>
+
+        <!-- Card com as informações do Fornecedor -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardInformacoesFornecedor"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:cardElevation="4dp"
+            app:cardCornerRadius="12dp"
+            app:cardBackgroundColor="@android:color/white"
+            android:layout_marginBottom="16dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="16dp">
+
+                <!-- Nome do Fornecedor -->
+                <TextView
+                    android:id="@+id/tvNomeFornecedor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Nome do Fornecedor"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/black" />
+
+                <!-- Categoria e Localização -->
+                <TextView
+                    android:id="@+id/tvCategoriaFornecedor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Categoria: "
+                    android:textSize="16sp"
+                    android:textColor="#606060"
+                    android:layout_marginTop="8dp" />
+
+                <TextView
+                    android:id="@+id/tvLocalizacaoFornecedor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Localização: "
+                    android:textSize="16sp"
+                    android:textColor="#606060"
+                    android:layout_marginTop="4dp" />
+
+                <!-- Contacto e Preço -->
+                <TextView
+                    android:id="@+id/tvContactoFornecedor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Contacto: "
+                    android:textSize="16sp"
+                    android:textColor="#606060"
+                    android:layout_marginTop="4dp" />
+
+                <TextView
+                    android:id="@+id/tvPrecoFornecedor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Preço: "
+                    android:textSize="16sp"
+                    android:textColor="#606060"
+                    android:layout_marginTop="4dp" />
+
+                <!-- Descrição do Fornecedor -->
+                <TextView
+                    android:id="@+id/tvDescricaoFornecedor"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Descrição do Fornecedor"
+                    android:textSize="16sp"
+                    android:textColor="#606060"
+                    android:layout_marginTop="8dp" />
+
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+</ScrollView>

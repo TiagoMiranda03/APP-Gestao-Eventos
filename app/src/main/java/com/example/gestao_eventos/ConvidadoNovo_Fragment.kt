@@ -25,12 +25,15 @@ class ConvidadoNovo_Fragment : Fragment() {
     }
 
 
+    private var eventoId: String? = null
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
         _binding = FragmentConvidadoNovoBinding.inflate(inflater, container, false)
+        eventoId = arguments?.getString("eventoId")
         return binding.root
     }
 
@@ -76,6 +79,9 @@ class ConvidadoNovo_Fragment : Fragment() {
                     Toast.makeText(requireContext(), "Convidado adicionado!!", Toast.LENGTH_SHORT).show()
 
                     val fragment = Selecionar_Convidados_Fragment.newInstance()
+                    val bundle = Bundle()
+                    bundle.putString("eventoId", eventoId)
+                    fragment.arguments = bundle
 
                     val transaction = parentFragmentManager.beginTransaction()
                     transaction.replace(R.id.fragmentContainer, fragment)
@@ -85,9 +91,9 @@ class ConvidadoNovo_Fragment : Fragment() {
                 .addOnFailureListener { e ->
                     Toast.makeText(requireContext(), "Erro ao adicionar convidado!!", Toast.LENGTH_SHORT).show()
                 }
-
         }
     }
+
 
     override fun onDestroyView() {
         super.onDestroyView()

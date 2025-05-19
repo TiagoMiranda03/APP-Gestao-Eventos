@@ -52,10 +52,11 @@ dependencies {
 
 
     implementation(platform("com.google.firebase:firebase-bom:33.9.0"))
-
     implementation("com.google.firebase:firebase-firestore-ktx")
     implementation("com.google.firebase:firebase-auth-ktx")
     implementation("com.google.firebase:firebase-database-ktx")
+    implementation("com.google.android.gms:play-services-auth:20.7.0")
+
 
     implementation("com.google.android.gms:play-services-location:21.0.1")
 
@@ -67,7 +68,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.activity)
     implementation(libs.androidx.constraintlayout)
-    implementation(libs.firebase.auth)
+    //implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.androidx.runtime.android)
     implementation(libs.androidx.storage)

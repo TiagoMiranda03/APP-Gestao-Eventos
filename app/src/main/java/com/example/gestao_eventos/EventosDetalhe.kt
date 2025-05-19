@@ -1,12 +1,14 @@
 package com.example.gestao_eventos
 
+import android.app.AlertDialog
+import android.content.Intent
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.example.gestao_eventos.databinding.FragmentEventosDetalheBinding
 import com.google.firebase.firestore.FirebaseFirestore
@@ -16,6 +18,7 @@ class EventosDetalhe : Fragment() {
     private lateinit var binding: FragmentEventosDetalheBinding
     private val db = FirebaseFirestore.getInstance()
     private val TAG = "EventosDetalhe"
+    private var eventoId: String? = null
 
     companion object {
         private const val ARG_EVENTO_ID = "evento_id"
@@ -33,9 +36,19 @@ class EventosDetalhe : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val eventoId = arguments?.getString(ARG_EVENTO_ID) ?: return
+        eventoId = arguments?.getString(ARG_EVENTO_ID)
 
-        db.collection("eventos").document(eventoId)
+        carregarDetalhesEvento()
+        configurarBotaoApagarEvento()
+    }
+
+    private fun carregarDetalhesEvento() {
+        if (eventoId == null) {
+            binding.tvTituloEvento.text = "Evento não encontrado"
+            return
+        }
+
+        db.collection("eventos").document(eventoId!!)
             .get()
             .addOnSuccessListener { doc ->
                 if (!doc.exists()) {
@@ -65,59 +78,60 @@ class EventosDetalhe : Fragment() {
                     setTextColor(Color.BLACK)
                 }
 
-                // ————— Convidados —————
+                // Convidados
                 binding.containerConvidados.removeAllViews()
-                val convidadosRaw = doc.get("convidados")
-                Log.d(TAG, "convidadosRaw = $convidadosRaw")
-                (convidadosRaw as? List<*>)?.forEach { item ->
-                    when (item) {
-                        is String -> {
-                            val nome = CryptoUtils.decrypt(item)
-                            binding.containerConvidados.addView(makeTextView("• $nome"))
-                        }
-                        is Map<*, *> -> {
-                            val nomeEnc  = item["nome"]  as? String ?: ""
-                            val emailEnc = item["email"] as? String ?: ""
-                            val nome  = CryptoUtils.decrypt(nomeEnc)
-                            val email = CryptoUtils.decrypt(emailEnc)
-                            binding.containerConvidados
-                                .addView(makeTextView("• $nome ($email)"))
-                        }
-                        else -> {
-                            Log.w(TAG, "Convidado de tipo inesperado: ${item?.javaClass}")
-                        }
-                    }
+                val convidadosRaw = doc.get("convidados") as? List<Map<String, String>>
+                convidadosRaw?.forEach {
+                    val nome = CryptoUtils.decrypt(it["nome"] ?: "")
+                    val email = CryptoUtils.decrypt(it["email"] ?: "")
+                    binding.containerConvidados.addView(makeTextView("• $nome ($email)"))
                 }
 
-                // ————— Fornecedores —————
+                // Fornecedores
                 binding.containerFornecedores.removeAllViews()
-                val fornecedoresRaw = doc.get("fornecedores")
-                Log.d(TAG, "fornecedoresRaw = $fornecedoresRaw")
-                when (fornecedoresRaw) {
-                    is List<*> -> fornecedoresRaw.forEach { item ->
-                        when (item) {
-                            is Map<*, *> -> {
-                                val nome = item["nome"] as? String ?: "Nome desconhecido"
-                                val localizacao = item["localizacao"] as? String ?: "Localização desconhecida"
-                                val contacto = item["Contacto"] as? String ?: "Contacto desconhecido"
-                                val preco = item["Preço"] as? String ?: "Preço desconhecido"
-                                val tipoServico = item["Tipo_Serviço"] as? String ?: "Tipo de serviço desconhecido"
-
-                                binding.containerFornecedores.addView(makeTextView("• $nome"))
-                                binding.containerFornecedores.addView(makeTextView("  Localização: $localizacao"))
-                                binding.containerFornecedores.addView(makeTextView("  Contacto: $contacto"))
-                                binding.containerFornecedores.addView(makeTextView("  Preço: $preco"))
-                                binding.containerFornecedores.addView(makeTextView("  Tipo de Serviço: $tipoServico"))
-                            }
-                            else -> Log.w(TAG, "Fornecedor de tipo inesperado: ${item?.javaClass}")
-                        }
-                    }
-                    null -> Log.i(TAG, "Campo 'fornecedores' não existe ou é nulo")
-                    else -> Log.w(TAG, "'fornecedores' não é uma lista: ${fornecedoresRaw.javaClass}")
+                val fornecedoresRaw = doc.get("fornecedores") as? List<Map<String, String>>
+                fornecedoresRaw?.forEach {
+                    val nome = it["nome"] ?: "Nome desconhecido"
+                    val localizacao = it["localizacao"] ?: "Localização desconhecida"
+                    binding.containerFornecedores.addView(makeTextView("• $nome - $localizacao"))
                 }
             }
             .addOnFailureListener { ex ->
                 binding.tvTituloEvento.text = "Erro: ${ex.message}"
+            }
+    }
+
+    private fun configurarBotaoApagarEvento() {
+        binding.btnApagarEvento.setOnClickListener {
+            if (eventoId == null) {
+                Toast.makeText(requireContext(), "ID do evento não encontrado.", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            AlertDialog.Builder(requireContext())
+                .setTitle("Apagar Evento")
+                .setMessage("Tens a certeza que queres apagar este evento? Esta ação é irreversível.")
+                .setPositiveButton("Sim") { _, _ ->
+                    apagarEvento()
+                }
+                .setNegativeButton("Não", null)
+                .show()
+        }
+    }
+
+    private fun apagarEvento() {
+        db.collection("eventos").document(eventoId!!)
+            .delete()
+            .addOnSuccessListener {
+                Toast.makeText(requireContext(), "Evento apagado com sucesso.", Toast.LENGTH_SHORT).show()
+                // Navegar para a Lista de Eventos Activity
+                val intent = Intent(requireContext(), Eventos::class.java)
+                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NEW_TASK)
+                startActivity(intent)
+                requireActivity().finish()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(requireContext(), "Erro ao apagar o evento: ${e.message}", Toast.LENGTH_SHORT).show()
             }
     }
 

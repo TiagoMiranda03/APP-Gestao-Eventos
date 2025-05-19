@@ -211,4 +211,52 @@
             android:src="@drawable/ic_arrow_right" />
     </RelativeLayout>
 
+    <LinearLayout
+        android:id="@+id/socialButtonsRow"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:layout_below="@id/btnRegisto"
+        android:layout_marginTop="24dp"
+        android:orientation="horizontal"
+        android:weightSum="2"
+        android:gravity="center_vertical"
+        android:baselineAligned="false">
+
+            <!-- Botão Google -->
+            <LinearLayout
+                android:id="@+id/btnGoogleCustom"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:background="@drawable/google_button_background"
+                android:elevation="2dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="match_parent"
+                    android:src="@drawable/ic_google_logo"
+                    android:scaleType="centerInside"
+                    android:contentDescription="Google logo" />
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:gravity="center"
+                    android:text="Registar com Google"
+                    android:textColor="#000000"
+                    android:textSize="16sp"
+                    android:textStyle="bold" />
+
+                <ImageView
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:src="@drawable/ic_arrow_right"
+                    android:scaleType="centerInside"
+                    android:contentDescription="Seta" />
+            </LinearLayout>
+        </LinearLayout>
 </RelativeLayout>

@@ -1,6 +1,7 @@
 <androidx.cardview.widget.CardView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:card_view="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/cardFornecedor"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:layout_marginBottom="8dp"
@@ -62,7 +63,6 @@
                 android:textSize="13sp"
                 android:textColor="#000000"/>
 
-
             <TextView
                 android:id="@+id/txtPrecoFornecedor"
                 android:layout_width="wrap_content"
@@ -70,7 +70,16 @@
                 android:text="Preço médio: €150"
                 android:textSize="13sp"
                 android:textColor="#000000"/>
-
+            <!-- Botão Ver Mais Detalhes -->
+            <Button
+                android:id="@+id/btnVerMaisDetalhes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Ver Mais Detalhes"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:backgroundTint="@color/blue"
+                android:layout_marginTop="8dp" />
         </LinearLayout>
 
         <CheckBox

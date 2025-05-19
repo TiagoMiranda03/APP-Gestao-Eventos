@@ -2,4 +2,6 @@
     <string name="app_name">Gestao_Eventos</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="default_web_client_id">499917334296-aj2v07h4bjbci5m5kl9i27dg30d5240f.apps.googleusercontent.com</string>
+
 </resources>

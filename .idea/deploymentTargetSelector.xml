@@ -4,10 +4,10 @@
     <selectionStates>
       <SelectionState runConfigName="app">
         <option name="selectionMode" value="DIALOG" />
-        <DropdownSelection timestamp="2025-04-23T22:28:55.536163700Z">
+        <DropdownSelection timestamp="2025-04-25T11:31:50.491131200Z">
           <Target type="DEFAULT_BOOT">
             <handle>
-              <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\tiago\.android\avd\Pixel_4_API_33.avd" />
+              <DeviceId pluginId="PhysicalDevice" identifier="serial=320524115920" />
             </handle>
           </Target>
         </DropdownSelection>
@@ -15,12 +15,12 @@
           <targets>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="PhysicalDevice" identifier="serial=320524115920" />
+                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\tiago\.android\avd\Pixel_4_API_33.avd" />
               </handle>
             </Target>
             <Target type="DEFAULT_BOOT">
               <handle>
-                <DeviceId pluginId="LocalEmulator" identifier="path=C:\Users\tiago\.android\avd\Pixel_4_API_33.avd" />
+                <DeviceId pluginId="PhysicalDevice" identifier="serial=320524115920" />
               </handle>
             </Target>
           </targets>
